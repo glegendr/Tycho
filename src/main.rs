@@ -1,8 +1,14 @@
 extern crate clap;
 use clap::{Arg, App, SubCommand};
 use std::process::Command;
+use std::env;
 
 fn main() {
+	if env::var("TYCHO_PATH").is_err() {
+		println!("TYCHO_PATH unset");
+		std::process::exit(1);
+	}
+		
 	let matches = App::new("Tycho")
 		.version("0.1")
 		.arg(Arg::with_name("initialize")
@@ -27,9 +33,16 @@ fn init_project(init_name: &str) {
 			.arg(format!("{}/src", init_name))
 			.arg(format!("{}/inc", init_name))
 			.spawn();
-		let _ = Command::new("touch")
+		let _ = Command::new("cp")
+			.arg(format!("{}/template/Makefile", env::var("TYCHO_PATH").unwrap()))
 			.arg(format!("{}/Makefile", init_name))
+			.spawn();
+		let _ = Command::new("cp")
+			.arg(format!("{}/template/main.c", env::var("TYCHO_PATH").unwrap()))
 			.arg(format!("{}/src/main.c", init_name))
+			.spawn();
+		let _ = Command::new("cp")
+			.arg(format!("{}/template/inc.h", env::var("TYCHO_PATH").unwrap()))
 			.arg(format!("{0}/inc/{0}.h", init_name))
 			.spawn();
 	} else {
