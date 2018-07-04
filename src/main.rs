@@ -1,7 +1,12 @@
+#[macro_use]
+extern crate serde_derive;
 extern crate clap;
-use clap::{Arg, App, SubCommand};
+extern crate toml;
+mod get_config;
+use clap::{Arg, App};
 use std::process::Command;
 use std::env;
+use get_config::{deploy_dependencies, deploy_pod};
 
 fn main() {
 	if env::var("TYCHO_PATH").is_err() {
@@ -33,6 +38,11 @@ fn main() {
 				.long("git")
 				.takes_value(false)
 				.help("create a repo git for your project (it has to be use with -i)"))
+		.arg(Arg::with_name("pod.toml")
+				.short("p")
+				.long("pod")
+				.takes_value(false)
+				.help("read pod.toml to deploy all your depedencies"))
 		.get_matches();
 	if let Some(init_name) = matches.value_of("initialize") {
 		if matches.is_present("create vessel") {
@@ -40,12 +50,14 @@ fn main() {
 		} else {
 			init_project(init_name, false);
 		}
-	}
-	if matches.is_present("update") {
+	} else if matches.is_present("update") {
 		unimplemented!("it's build time !");
-	}
-	if let Some(pod) =  matches.value_of("deploy pod") {
+	} else if let Some(pod) =  matches.value_of("deploy pod") {
 		deploy_pod(pod);
+	} else if matches.is_present("pod.toml") {
+		deploy_dependencies();
+	} else {
+		println!("If you need help use tycho [-h | --help]");
 	}
 }
 
@@ -90,36 +102,6 @@ fn init_project(init_name: &str, git: bool) {
 		}
 	} else {
 		println!("failed to create {} directory", init_name);
-		std::process::exit(1);
-	}
-}
-
-fn get_pod_name(url: &str) -> &str {
-	url.split("/").last().unwrap().split(".").next().unwrap()
-}
-
-fn deploy_pod(pod: &str) {
-	let _ = Command::new("mkdir")
-		.arg("-p")
-		.arg("pods")
-		.status();
-	let gcl_status = Command::new("git")
-		.arg("clone")
-		.arg(pod)
-		.status()
-		.expect("");
-	if gcl_status.success() {
-		let name = get_pod_name(pod);
-		let _ = Command::new("mv")
-			.arg(name)
-			.arg("pods/")
-			.spawn();
-		let _ = Command::new("rm")
-			.arg("-rf")
-			.arg(format!("pods/{}/.git", name))
-			.spawn();
-	} else {
-		println!("failed to deploy your pod");
 		std::process::exit(1);
 	}
 }
