@@ -54,12 +54,11 @@ pub fn deploy_pod(pod: &str) {
 pub fn deploy_dependencies() {
 	match read_toml("pod.toml") {
 		Ok(config) => {
-		/*	for pod in config.dependencies {
-				if let Some(url) = pod.as_str() {
-					deploy_pod(url);
-					}
-			}*/
-	unimplemented!();
+			for pod in config.dependencies {
+				let url = pod.1;
+				deploy_pod(&url);
+			}
+//	unimplemented!();
 		}
 		Err(e) => println!("Error: {}", e),
 	};
