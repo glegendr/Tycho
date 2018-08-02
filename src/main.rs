@@ -49,75 +49,20 @@ fn main() {
 		println!("TYCHO_PATH unset");
 		std::process::exit(1);
 	}
-/*
-	let matches = App::new("Tycho")
-		.version("0.1")
-		.subcommand(SubCommand::with_name("init")
-				.about("Initialize a C project")
-				.arg(Arg::with_name("create vessel")
-					.short("g")
-					.long("git")
-					.takes_value(false)
-					.help("create a repo git for your project (it has to be use with -i)"))
-				.arg(Arg::with_name("initialize")
-					.short("i")
-					.long("init")
-					.value_name("NAME")
-					.takes_value(true)
-					.help("init a new C project")))
-		.arg(Arg::with_name("update")
-				.short("u")
-				.long("update")
-				.takes_value(false)
-				.help("update the Makefile"))
-		.arg(Arg::with_name("deploy pod")
-				.short("d")
-				.long("deploy-pod")
-				.takes_value(true)
-				.value_name("POD_URL")
-				.help("deploy a pod in the solution"))
-		.arg(Arg::with_name("pod.toml")
-				.short("p")
-				.long("pod")
-				.takes_value(false)
-				.help("read pod.toml to deploy all your depedencies"))
-		.get_matches(); */
-//	println!("{:?}", matches);
 	match Opt::from_args() {
 		Opt::Init { name, git } => {
-			println!("{} {}", name, git);
 			init_project(&name, git);
 			}
 		Opt::Update { up } => {
-			println!("{}", up);
 		unimplemented!("it's build time !");
-
 		}
 		Opt::Deploy { deploy } => {
-			println!("{}", deploy);
 			deploy_pod(&deploy);
 		}
 		Opt::Toml { pod } => {
-			println!("{}", pod);
 			deploy_dependencies();
 		}
 	}
-	
-/*	if let Some(init_name) = matches.value_of("Init") {
-		if matches.is_present("create vessel") {
-			init_project(init_name, true);
-		} else {
-			init_project(init_name, false);
-		}
-	} else if matches.is_present("update") {
-		unimplemented!("it's build time !");
-	} else if let Some(pod) =  matches.value_of("deploy pod") {
-		deploy_pod(pod);
-	} else if matches.is_present("pod.toml") {
-		deploy_dependencies();
-	} else {
-		println!("If you need help use tycho [-h | --help]");
-	}*/
 }
 
 fn init_project(init_name: &str, git: bool) {
