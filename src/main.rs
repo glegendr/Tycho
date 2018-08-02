@@ -2,45 +2,42 @@
 extern crate serde_derive;
 #[macro_use]
 extern crate structopt;
-extern crate clap;
 extern crate toml;
 mod get_config;
-use clap::{Arg, App, SubCommand};
 use std::process::Command;
 use std::env;
 use get_config::{deploy_dependencies, deploy_pod};
-use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Tycho")]
 
 enum Opt {
+	/// Initialize project
 #[structopt(name = "init")]
 	Init {
-#[structopt(short = "i", long  = "initialize")]
+		/// Project's name
 		name: String,
+		/// Initialize with a git repository
 #[structopt(short = "g", long  = "git")]
 		git: bool,
 	},
-
+	/// Update project
 #[structopt(name = "update")]
 	Update {
+		/// update makefile -uniplemented-
 #[structopt(short = "u", long  = "update")]
 		up: bool,
-	},
-
-
-#[structopt(name = "deploy")]
-	Deploy {
-#[structopt(short = "d", long  = "deploy_pod")]
-		deploy: String,
-	},
-
-#[structopt(name = "toml")]
-	Toml {
+		/// deploy pod in toml
 #[structopt(short = "p", long  = "pod")]
 		pod: bool,
+	},
+
+	/// Deploy a pod
+#[structopt(name = "deploy")]
+	Deploy {
+		/// Name of pod
+		deploy: String,
 	},
 }
 
@@ -53,14 +50,15 @@ fn main() {
 		Opt::Init { name, git } => {
 			init_project(&name, git);
 			}
-		Opt::Update { up } => {
+		Opt::Update { up, pod } => {
+			if pod == true {
+			deploy_dependencies();
+			} else if up == true {
 		unimplemented!("it's build time !");
+			}
 		}
 		Opt::Deploy { deploy } => {
 			deploy_pod(&deploy);
-		}
-		Opt::Toml { pod } => {
-			deploy_dependencies();
 		}
 	}
 }
