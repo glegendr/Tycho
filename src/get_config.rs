@@ -58,7 +58,6 @@ pub fn deploy_dependencies() {
 				let url = pod.1;
 				deploy_pod(&url);
 			}
-//	unimplemented!();
 		}
 		Err(e) => println!("Error: {}", e),
 	};
