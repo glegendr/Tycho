@@ -1,6 +1,9 @@
 use std::io;
+use std::str;
+use std::env;
 use std::io::prelude::*;
 use std::fs::File;
+use std::fs;
 use std::process::Command;
 use toml;
 use std::collections::BTreeMap;
@@ -15,11 +18,11 @@ fn read_toml(path: &str) -> io::Result<Config> {
 	let mut buffer = Vec::new();
 	file.read_to_end(&mut buffer)?;
 	let config = match toml::from_slice(&buffer) {
-			Ok(v) => v,
+		Ok(v) => v,
 			Err(_) => Config {dependencies: BTreeMap::new()},
-		};
-		println!("{:?}", config);
-		Ok(config)
+	};
+	println!("{:?}", config);
+	Ok(config)
 }
 
 fn get_pod_name(url: &str) -> &str {
@@ -61,4 +64,34 @@ pub fn deploy_dependencies() {
 		}
 		Err(e) => println!("Error: {}", e),
 	};
+}
+
+pub fn reset_makefile() {
+	let _ = Command::new("rm")
+		.arg(format!("-rf"))
+		.arg(format!("makefile"))
+		.spawn();
+	let _ = Command::new("cp")
+		.arg(format!("{}/template/Makefile", env::var("TYCHO_PATH").unwrap()))
+		.arg(format!("./Makefile"))
+		.spawn();
+}
+
+pub fn update_makefile() -> io::Result<()> {
+	/*let mut file = File::open("Makefile")?;
+	// Mettre dns une string
+	let mut contents = String::new();
+	file.read_to_string(&mut contents)?;
+	println!("{}", contents);
+	// EOS
+	let mut file2 = File::create("Makefile")?;
+	file2.write(b"Hello")?;
+	Ok(()
+	 */
+	let paths = fs::read_dir("src/").unwrap();
+
+	for path in paths {
+		println!("{}", path.unwrap().path().display())
+	}
+	Ok(())
 }

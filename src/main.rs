@@ -6,7 +6,7 @@ extern crate toml;
 mod get_config;
 use std::process::Command;
 use std::env;
-use get_config::{deploy_dependencies, deploy_pod};
+use get_config::{deploy_dependencies, deploy_pod, update_makefile, reset_makefile};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -17,27 +17,30 @@ enum Opt {
 #[structopt(name = "init")]
 	Init {
 		/// Project's name
-		name: String,
-		/// Initialize with a git repository
+name: String,
+	  /// Initialize with a git repository
 #[structopt(short = "g", long  = "git")]
-		git: bool,
+	  git: bool,
 	},
 	/// Update project
 #[structopt(name = "update")]
 	Update {
 		/// update makefile -uniplemented-
-#[structopt(short = "u", long  = "update")]
-		up: bool,
-		/// deploy pod in toml
+#[structopt(short = "m", long  = "makefile")]
+mak: bool,
+	/// deploy pod in toml
 #[structopt(short = "p", long  = "pod")]
-		pod: bool,
+	pod: bool,
+	// reset Makefile
+#[structopt(short = "r", long  = "reset")]
+	res: bool,
 	},
 
 	/// Deploy a pod
 #[structopt(name = "deploy")]
 	Deploy {
 		/// Name of pod
-		deploy: String,
+deploy: String,
 	},
 }
 
@@ -49,12 +52,15 @@ fn main() {
 	match Opt::from_args() {
 		Opt::Init { name, git } => {
 			init_project(&name, git);
-			}
-		Opt::Update { up, pod } => {
-			if pod == true {
-			deploy_dependencies();
-			} else if up == true {
-		unimplemented!("it's build time !");
+		}
+		Opt::Update { mak, pod, res } => {
+			if res == true {
+				reset_makefile();
+			} else if pod == true {
+				deploy_dependencies();
+			} else if mak == true {
+				//let _ = update_makefile();
+				unimplemented!("it's build time !");
 			}
 		}
 		Opt::Deploy { deploy } => {
