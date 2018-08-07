@@ -59,8 +59,7 @@ fn main() {
 			} else if pod == true {
 				deploy_dependencies();
 			} else if mak == true {
-				//let _ = update_makefile();
-				unimplemented!("it's build time !");
+				let _ = update_makefile();
 			}
 		}
 		Opt::Deploy { deploy } => {
