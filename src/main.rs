@@ -8,6 +8,7 @@ use std::process::Command;
 use std::env;
 use get_config::{deploy_dependencies, deploy_pod, update_makefile, reset_makefile};
 use structopt::StructOpt;
+use std::{thread, time};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Tycho")]
@@ -28,12 +29,12 @@ name: String,
 		/// update makefile -uniplemented-
 #[structopt(short = "m", long  = "makefile")]
 mak: bool,
-	/// deploy pod in toml
+	 /// deploy pod in toml
 #[structopt(short = "p", long  = "pod")]
-	pod: bool,
-	// reset Makefile
+	 pod: bool,
+	 // reset Makefile
 #[structopt(short = "r", long  = "reset")]
-	res: bool,
+	 res: bool,
 	},
 
 	/// Deploy a pod
@@ -108,11 +109,16 @@ fn init_project(init_name: &str, git: bool) {
 				.spawn();
 		}
 		let _ = Command::new("sed")
-		.arg(format!("-i"))
-		.arg(format!("-e"))
-		.arg(format!("s/NAME= a.out/NAME= {}/g", init_name))
-		.arg(format!("{}/Makefile", init_name))
-		.spawn();
+			.arg(format!("-i"))
+			.arg(format!("-e"))
+			.arg(format!("s/NAME= a.out/NAME= {}/g", init_name))
+			.arg(format!("{}/Makefile", init_name))
+			.spawn();
+		thread::sleep(time::Duration::from_millis(10));
+		let _ = Command::new("rm")
+			.arg(format!("-rf"))
+			.arg(format!("{}/Makefile-e", init_name))
+			.spawn();
 	} else {
 		println!("failed to create {} directory", init_name);
 		std::process::exit(1);
