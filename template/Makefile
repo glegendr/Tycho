@@ -1,3 +1,4 @@
+.PHONY: all re fclean clean
 NAME= a.out
 CC=gcc
 CFLAG=
