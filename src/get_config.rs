@@ -3,10 +3,11 @@ use std::str;
 use std::env;
 use std::io::prelude::*;
 use std::fs::File;
-use std::fs;
 use std::process::Command;
 use toml;
 use std::collections::BTreeMap;
+use std::path::Path;
+use std::{thread, time};
 
 #[derive(Deserialize, Debug)]
 struct Config {
@@ -78,20 +79,40 @@ pub fn reset_makefile() {
 }
 
 pub fn update_makefile() -> io::Result<()> {
-	/*let mut file = File::open("Makefile")?;
-	// Mettre dns une string
-	let mut contents = String::new();
-	file.read_to_string(&mut contents)?;
-	println!("{}", contents);
-	// EOS
-	let mut file2 = File::create("Makefile")?;
-	file2.write(b"Hello")?;
-	Ok(()
-	 */
-	let paths = fs::read_dir("src/").unwrap();
-
-	for path in paths {
-		println!("{}", path.unwrap().path().display())
+	let ten_millis = time::Duration::from_millis(10);
+	thread::sleep(ten_millis);
+	let _ = Command::new("sed")
+		.arg(format!("-i"))
+		.arg(format!("-e"))
+		.arg(format!("s/SRCNAME=.*/SRCNAME=/g"))
+		.arg(format!("Makefile"))
+		.spawn();
+	let path = Path::new("src/");
+	for entry in path.read_dir().expect("read_dir call failed") {
+		if let Ok(entry) = entry {
+			let path = entry.path();
+			let ext = path.extension();
+			if ext == None {
+				continue;
+				}
+			if ext.unwrap() == "c" {
+			let file_name = path.file_name().unwrap();
+			let str = file_name.to_str().unwrap();
+			let (str_end, _) = str.split_at(str.len() - 2);
+			thread::sleep(ten_millis);
+			let _ = Command::new("sed")
+				.arg(format!("-i"))
+				.arg(format!("-e"))
+				.arg(format!("s/SRCNAME=/SRCNAME= {}/g",  str_end))
+				.arg(format!("./Makefile"))
+				.spawn();
+			}
+		}
 	}
+	thread::sleep(ten_millis);
+	let _ = Command::new("rm")
+		.arg(format!("-rf"))
+		.arg(format!("Makefile-e"))
+		.spawn();
 	Ok(())
 }
