@@ -107,6 +107,12 @@ fn init_project(init_name: &str, git: bool) {
 				.arg(format!("{}/.gitignore", init_name))
 				.spawn();
 		}
+		let _ = Command::new("sed")
+		.arg(format!("-i"))
+		.arg(format!("-e"))
+		.arg(format!("s/NAME= a.out/NAME= {}/g", init_name))
+		.arg(format!("{}/Makefile", init_name))
+		.spawn();
 	} else {
 		println!("failed to create {} directory", init_name);
 		std::process::exit(1);
