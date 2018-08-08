@@ -26,13 +26,13 @@ name: String,
 	/// Update project
 #[structopt(name = "update")]
 	Update {
-		/// update makefile -uniplemented-
+		/// update makefile
 #[structopt(short = "m", long  = "makefile")]
 mak: bool,
 	 /// deploy pod in toml
 #[structopt(short = "p", long  = "pod")]
 	 pod: bool,
-	 // reset Makefile
+	 /// reset Makefile
 #[structopt(short = "r", long  = "reset")]
 	 res: bool,
 	},
@@ -114,7 +114,8 @@ fn init_project(init_name: &str, git: bool) {
 			.arg(format!("s/NAME= a.out/NAME= {}/g", init_name))
 			.arg(format!("{}/Makefile", init_name))
 			.spawn();
-		thread::sleep(time::Duration::from_millis(10));
+		thread::sleep(time::Duration::from_millis(30));
+		thread::sleep(time::Duration::from_millis(30));
 		let _ = Command::new("rm")
 			.arg(format!("-rf"))
 			.arg(format!("{}/Makefile-e", init_name))
