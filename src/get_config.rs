@@ -56,12 +56,53 @@ pub fn deploy_pod(pod: &str) {
 }
 
 pub fn deploy_dependencies() {
+	let _ = Command::new("sed")
+		.arg(format!("-i"))
+		.arg(format!("-e"))
+		.arg(format!("s/LIBS=.*/LIBS=/g"))
+		.arg(format!("Makefile"))
+		.spawn();
+	let _ = Command::new("sed")
+		.arg(format!("-i"))
+		.arg(format!("-e"))
+		.arg(format!("s/CC_LIBS=.*/CC_LIBS=/g"))
+		.arg(format!("Makefile"))
+		.spawn();
+	let _ = Command::new("sed")
+		.arg(format!("-i"))
+		.arg(format!("-e"))
+		.arg(format!("s/INC_DIR_LIBS=.*/INC_DIR_LIBS=/g"))
+		.arg(format!("Makefile"))
+		.spawn();
 	match read_toml("pod.toml") {
 		Ok(config) => {
 			for pod in config.dependencies {
 				let url = pod.1;
+				let name = pod.0;
+				let _ = Command::new("sed")
+					.arg(format!("-i"))
+					.arg(format!("-e"))
+					.arg(format!("/_LIBS=/! s,LIBS=,LIBS= ./pods/{}/{}.a,", name, name))
+					.arg(format!("Makefile"))
+					.spawn();
+				let _ = Command::new("sed")
+					.arg(format!("-i"))
+					.arg(format!("-e"))
+					.arg(format!("s,CC_LIBS=,CC_LIBS= make -C ./pods/{}/;,g", name))
+					.arg(format!("Makefile"))
+					.spawn();
+				let _ = Command::new("sed")
+					.arg(format!("-i"))
+					.arg(format!("-e"))
+					.arg(format!("s,INC_DIR_LIBS=,INC_DIR_LIBS= -I ./pods/{}/inc,g", name))
+					.arg(format!("Makefile"))
+					.spawn();
 				deploy_pod(&url);
 			}
+	let _ = Command::new("rm")
+		.arg(format!("-rf"))
+		.arg(format!("Makefile-e"))
+		.spawn();
 		}
 		Err(e) => println!("Error: {}", e),
 	};
@@ -94,18 +135,18 @@ pub fn update_makefile() -> io::Result<()> {
 			let ext = path.extension();
 			if ext == None {
 				continue;
-				}
+			}
 			if ext.unwrap() == "c" {
-			let file_name = path.file_name().unwrap();
-			let str = file_name.to_str().unwrap();
-			let (str_end, _) = str.split_at(str.len() - 2);
-			thread::sleep(ten_millis);
-			let _ = Command::new("sed")
-				.arg(format!("-i"))
-				.arg(format!("-e"))
-				.arg(format!("s/SRCNAME=/SRCNAME= {}/g",  str_end))
-				.arg(format!("./Makefile"))
-				.spawn();
+				let file_name = path.file_name().unwrap();
+				let str = file_name.to_str().unwrap();
+				let (str_end, _) = str.split_at(str.len() - 2);
+				thread::sleep(ten_millis);
+				let _ = Command::new("sed")
+					.arg(format!("-i"))
+					.arg(format!("-e"))
+					.arg(format!("s/SRCNAME=/SRCNAME= {}/g",  str_end))
+					.arg(format!("./Makefile"))
+					.spawn();
 			}
 		}
 	}
