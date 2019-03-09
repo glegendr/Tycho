@@ -6,7 +6,7 @@ extern crate toml;
 mod get_config;
 use std::process::Command;
 use std::env;
-use get_config::{deploy_dependencies, deploy_pod, update_makefile, reset_makefile};
+use get_config::{deploy_dependencies, deploy_pod, update_makefile, update_makefile_src, reset_makefile};
 use structopt::StructOpt;
 use std::{thread, time};
 
@@ -28,7 +28,13 @@ name: String,
 	Update {
 		/// update makefile
 #[structopt(short = "m", long  = "makefile")]
-mak: bool,
+	mak: bool,
+		/// update src/ in makefile
+#[structopt(short = "s", long  = "sources")]
+	src: bool,
+		/// update pods/ in makefile
+#[structopt(short = "i", long  = "includes")]
+	inc: bool,
 	 /// deploy pod in toml
 #[structopt(short = "p", long  = "pod")]
 	 pod: bool,
@@ -54,19 +60,36 @@ fn main() {
 		Opt::Init { name, git } => {
 			init_project(&name, git);
 		}
-		Opt::Update { mak, pod, res } => {
+		Opt::Update { mak, src, inc, pod, res } => {
+			let mut ret = false;
 			if res == true {
 				reset_makefile();
-			} else if pod == true {
-				deploy_dependencies();
-			} else if mak == true {
+				ret = true;
+			}
+			if pod == true {
+				deploy_dependencies(true);
+				ret = true;
+			}
+			if inc == true {
+				deploy_dependencies(false);
+				ret = true;
+			}
+			if src == true {
+				let _ = update_makefile_src();
+				ret = true;
+			}
+			if mak == true  || ret == false {
 				let _ = update_makefile();
 			}
 		}
 		Opt::Deploy { deploy } => {
 			deploy_pod(&deploy);
 		}
-	}
+	};
+	let _ = Command::new("sh")
+		.arg("-c")
+		.arg("rm -rf *.tycho_save")
+		.spawn();
 }
 
 fn init_project(init_name: &str, git: bool) {
@@ -102,6 +125,10 @@ fn init_project(init_name: &str, git: bool) {
 			.arg(format!("{}/template/inc.h", env::var("TYCHO_PATH").unwrap()))
 			.arg(format!("{0}/inc/{0}.h", init_name))
 			.spawn();
+		let _ = Command::new("cp")
+			.arg(format!("{}/template/pod.toml", env::var("TYCHO_PATH").unwrap()))
+			.arg(format!("{}/pod.toml", init_name))
+			.spawn();
 		if git == true {
 			let _ = Command::new("cp")
 				.arg(format!("{}/template/.gitignore", env::var("TYCHO_PATH").unwrap()))
@@ -109,16 +136,10 @@ fn init_project(init_name: &str, git: bool) {
 				.spawn();
 		}
 		let _ = Command::new("sed")
-			.arg(format!("-i"))
+			.arg(format!("-i.tycho_save"))
 			.arg(format!("-e"))
 			.arg(format!("s/NAME= a.out/NAME= {}/g", init_name))
 			.arg(format!("{}/Makefile", init_name))
-			.spawn();
-		thread::sleep(time::Duration::from_millis(30));
-		thread::sleep(time::Duration::from_millis(30));
-		let _ = Command::new("rm")
-			.arg(format!("-rf"))
-			.arg(format!("{}/Makefile-e", init_name))
 			.spawn();
 	} else {
 		println!("failed to create {} directory", init_name);

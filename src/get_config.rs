@@ -50,59 +50,51 @@ pub fn deploy_pod(pod: &str) {
 			.arg("-rf")
 			.arg(format!("pods/{}/.git", name))
 			.spawn();
+		let sed = format!("s,wait,{}=\"{}\",g", name, pod);
+		let ten_millis = time::Duration::from_millis(10);
+		thread::sleep(ten_millis);
+		let _ = Command::new("sh")
+			.arg("-c")
+			.arg("echo wait >> pod.toml")
+			.spawn();
+		thread::sleep(ten_millis);
+		let _ = Command::new("sed")
+			.arg("-i.tycho_save")
+			.arg("-e")
+			.arg(sed)
+			.arg("pod.toml")
+			.spawn();
 	} else {
 		println!("failed to deploy your pod");
 	}
 }
 
-pub fn deploy_dependencies() {
+pub fn deploy_dependencies(clone: bool) {
 	let _ = Command::new("sed")
-		.arg(format!("-i"))
-		.arg(format!("-e"))
+		.arg("-i.tycho_save")
+		.arg("-e")
 		.arg(format!("s/LIBS=.*/LIBS=/g"))
-		.arg(format!("Makefile"))
-		.spawn();
-	let _ = Command::new("sed")
-		.arg(format!("-i"))
-		.arg(format!("-e"))
-		.arg(format!("s/CC_LIBS=.*/CC_LIBS=/g"))
-		.arg(format!("Makefile"))
-		.spawn();
-	let _ = Command::new("sed")
-		.arg(format!("-i"))
-		.arg(format!("-e"))
-		.arg(format!("s/INC_DIR_LIBS=.*/INC_DIR_LIBS=/g"))
-		.arg(format!("Makefile"))
+		.arg("Makefile")
 		.spawn();
 	match read_toml("pod.toml") {
 		Ok(config) => {
 			for pod in config.dependencies {
 				let url = pod.1;
 				let name = pod.0;
-				let _ = Command::new("sed")
-					.arg(format!("-i"))
-					.arg(format!("-e"))
-					.arg(format!("/_LIBS=/! s,LIBS=,LIBS= ./pods/{}/{}.a,", name, name))
-					.arg(format!("Makefile"))
-					.spawn();
-				let _ = Command::new("sed")
-					.arg(format!("-i"))
-					.arg(format!("-e"))
-					.arg(format!("s,CC_LIBS=,CC_LIBS= make -C ./pods/{}/;,g", name))
-					.arg(format!("Makefile"))
-					.spawn();
-				let _ = Command::new("sed")
-					.arg(format!("-i"))
-					.arg(format!("-e"))
-					.arg(format!("s,INC_DIR_LIBS=,INC_DIR_LIBS= -I ./pods/{}/inc,g", name))
-					.arg(format!("Makefile"))
-					.spawn();
-				deploy_pod(&url);
+				while  {
+					let sed_status = Command::new("sed")
+					.arg("-i.tycho_save")
+					.arg("-e")
+					.arg(format!("/_LIBS=/! s,LIBS=,LIBS= ./pods/{0}/{0}.a,; s,CC_LIBS=,CC_LIBS= make -C ./pods/{0}/;,g ; s,INC_DIR_LIBS=,INC_DIR_LIBS= -I ./pods/{0}/inc,g", name))
+					.arg("Makefile")
+					.status()
+					.expect("");
+					!sed_status.success()
+				} {}
+				if clone {
+					deploy_pod(&url);
+				}
 			}
-	let _ = Command::new("rm")
-		.arg(format!("-rf"))
-		.arg(format!("Makefile-e"))
-		.spawn();
 		}
 		Err(e) => println!("Error: {}", e),
 	};
@@ -110,23 +102,23 @@ pub fn deploy_dependencies() {
 
 pub fn reset_makefile() {
 	let _ = Command::new("rm")
-		.arg(format!("-rf"))
-		.arg(format!("makefile"))
+		.arg("-rf")
+		.arg("makefile")
 		.spawn();
 	let _ = Command::new("cp")
 		.arg(format!("{}/template/Makefile", env::var("TYCHO_PATH").unwrap()))
-		.arg(format!("./Makefile"))
+		.arg("./Makefile")
 		.spawn();
 }
 
-pub fn update_makefile() -> io::Result<()> {
+pub fn update_makefile_src() -> io::Result<()> {
 	let ten_millis = time::Duration::from_millis(10);
 	thread::sleep(ten_millis);
 	let _ = Command::new("sed")
-		.arg(format!("-i"))
-		.arg(format!("-e"))
+		.arg("-i.tycho_save")
+		.arg("-e")
 		.arg(format!("s/SRCNAME=.*/SRCNAME=/g"))
-		.arg(format!("Makefile"))
+		.arg("Makefile")
 		.spawn();
 	let path = Path::new("src/");
 	for entry in path.read_dir().expect("read_dir call failed") {
@@ -142,18 +134,18 @@ pub fn update_makefile() -> io::Result<()> {
 				let (str_end, _) = str.split_at(str.len() - 2);
 				thread::sleep(ten_millis);
 				let _ = Command::new("sed")
-					.arg(format!("-i"))
-					.arg(format!("-e"))
+					.arg("-i.tycho_save")
+					.arg("-e")
 					.arg(format!("s/SRCNAME=/SRCNAME= {}/g",  str_end))
-					.arg(format!("./Makefile"))
+					.arg("./Makefile")
 					.spawn();
 			}
 		}
 	}
-	thread::sleep(ten_millis);
-	let _ = Command::new("rm")
-		.arg(format!("-rf"))
-		.arg(format!("Makefile-e"))
-		.spawn();
 	Ok(())
+}
+
+pub fn update_makefile() -> io::Result<()> {
+	deploy_dependencies(false);
+	update_makefile_src()
 }
