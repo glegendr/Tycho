@@ -30,7 +30,7 @@ fn get_pod_name(url: &str) -> &str {
 	url.split("/").last().unwrap().split(".").next().unwrap()
 }
 
-pub fn deploy_pod(pod: &str) {
+pub fn deploy_pod(pod: &str, flag: bool) {
 	let _ = Command::new("mkdir")
 		.arg("-p")
 		.arg("pods")
@@ -48,22 +48,25 @@ pub fn deploy_pod(pod: &str) {
 			.spawn();
 		let _ = Command::new("rm")
 			.arg("-rf")
+			.arg(name)
 			.arg(format!("pods/{}/.git", name))
 			.spawn();
-		let sed = format!("s,wait,{}=\"{}\",g", name, pod);
-		let ten_millis = time::Duration::from_millis(10);
-		thread::sleep(ten_millis);
-		let _ = Command::new("sh")
-			.arg("-c")
-			.arg("echo wait >> pod.toml")
-			.spawn();
-		thread::sleep(ten_millis);
-		let _ = Command::new("sed")
-			.arg("-i.tycho_save")
-			.arg("-e")
-			.arg(sed)
-			.arg("pod.toml")
-			.spawn();
+		if flag {
+			let sed = format!("s,wait,{}=\"{}\",g", name, pod);
+			let ten_millis = time::Duration::from_millis(10);
+			thread::sleep(ten_millis);
+			let _ = Command::new("sh")
+				.arg("-c")
+				.arg("echo wait >> pod.toml")
+				.spawn();
+			thread::sleep(ten_millis);
+			let _ = Command::new("sed")
+				.arg("-i.tycho_save")
+				.arg("-e")
+				.arg(sed)
+				.arg("pod.toml")
+				.spawn();
+		}
 	} else {
 		println!("failed to deploy your pod");
 	}
@@ -83,16 +86,16 @@ pub fn deploy_dependencies(clone: bool) {
 				let name = pod.0;
 				while  {
 					let sed_status = Command::new("sed")
-					.arg("-i.tycho_save")
-					.arg("-e")
-					.arg(format!("/_LIBS=/! s,LIBS=,LIBS= ./pods/{0}/{0}.a,; s,CC_LIBS=,CC_LIBS= make -C ./pods/{0}/;,g ; s,INC_DIR_LIBS=,INC_DIR_LIBS= -I ./pods/{0}/inc,g", name))
-					.arg("Makefile")
-					.status()
-					.expect("");
+						.arg("-i.tycho_save")
+						.arg("-e")
+						.arg(format!("/_LIBS=/! s,LIBS=,LIBS= ./pods/{0}/{0}.a,; s,CC_LIBS=,CC_LIBS= make -C ./pods/{0}/;,g ; s,INC_DIR_LIBS=,INC_DIR_LIBS= -I ./pods/{0}/inc,g", name))
+						.arg("Makefile")
+						.status()
+						.expect("");
 					!sed_status.success()
 				} {}
 				if clone {
-					deploy_pod(&url);
+					deploy_pod(&url, false);
 				}
 			}
 		}

@@ -83,9 +83,11 @@ fn main() {
 			}
 		}
 		Opt::Deploy { deploy } => {
-			deploy_pod(&deploy);
+			deploy_pod(&deploy, true);
 		}
 	};
+	let ten_millis = time::Duration::from_millis(30);
+	thread::sleep(ten_millis);
 	let _ = Command::new("sh")
 		.arg("-c")
 		.arg("rm -rf *.tycho_save")
@@ -135,12 +137,6 @@ fn init_project(init_name: &str, git: bool) {
 				.arg(format!("{}/.gitignore", init_name))
 				.spawn();
 		}
-		let _ = Command::new("sed")
-			.arg(format!("-i.tycho_save"))
-			.arg(format!("-e"))
-			.arg(format!("s/NAME= a.out/NAME= {}/g", init_name))
-			.arg(format!("{}/Makefile", init_name))
-			.spawn();
 	} else {
 		println!("failed to create {} directory", init_name);
 		std::process::exit(1);
