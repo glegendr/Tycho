@@ -3,7 +3,7 @@ C package Manager
 
 ## PRE
 
-you need to install `rust`
+you need to install `rust` with command `curl https://sh.rustup.rs -sSf | sh`
 
 ## Install
 
@@ -25,11 +25,10 @@ Tycho update is why the vessel has been construct.
 Tycho update can update your makefile and your dependencies with command `tycho update [FLAGS]`
 
 * You can update your makefile
-     * `tycho update -m` or `tycho update` without flag will make `tycho -is`
+     * `tycho update -m` or `tycho update` will make `tycho update -is`
      * `tycho update -i` will add your dependencies (`pods/*`) in `Makefile`
      * `tycho update -s` will add your sources (`src/*`) in `Makefile`
      * `tycho update -r` will reset your makefile with only `main.c`
-     * Care `-r` flag it will replace your binary by a.out
 * You can also deploy and update librairies (inverse of `tycho deploy`)
      * `tycho update -p` work with `pod.toml` that you have to create at the root
      * This `pod.toml` work like this:
@@ -41,6 +40,7 @@ Tycho update can update your makefile and your dependencies with command `tycho 
      * He will clone your dependencies and add them to Makefile
      * You have to create `libvec.a` manualy by going in `./pods/libvec` and lanch `make`
 * You can use `tycho update -h` to get help with update operation
+
 ## Other
 * You can use `tycho -h` to get help
 * You can use `tycho -V` to get version
