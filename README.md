@@ -19,7 +19,7 @@ He can be launch by git-hub's vessel by adding `-g` flag
 This command will deploy pods in your pods directory with commands `tycho deploy <url>` and add the url in pod.toml
 Care it will not be deployed in your `Makefile` !
 
-## Update
+### Update
 Tycho update is why the vessel has been construct.
 
 Tycho update can update your makefile and your dependencies with command `tycho update [FLAGS]`
@@ -41,6 +41,6 @@ Tycho update can update your makefile and your dependencies with command `tycho 
      * You have to create `libvec.a` manualy by going in `./pods/libvec` and lanch `make`
 * You can use `tycho update -h` to get help with update operation
 
-## Other
+### Other
 * You can use `tycho -h` to get help
 * You can use `tycho -V` to get version
