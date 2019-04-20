@@ -25,10 +25,14 @@ OBJ= $(addprefix $(OBJDIR), $(addsuffix .o, $(SRCNAME)))
 
 all: $(NAME)
 
-$(NAME): $(OBJDIR) $(OBJ)
-	@$(CC_LIBS)
+$(NAME): $(OBJDIR) $(OBJ) $(LIBS)
 	@$(CC) -o $@ $(OBJ) $(LIBS)
 	@(echo "[ \033[35m$@\033[00m ]")
+	
+$(LIBS): libs ;
+
+libs:
+	@$(CC_LIBS)
 
 $(OBJDIR)%.o: $(SRCDIR)%.c
 	@$(CC) $(CFLAG) -c $< -o $@ -I $(INC_DIR) $(INC_DIR_LIBS)
